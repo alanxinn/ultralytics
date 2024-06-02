@@ -345,10 +345,13 @@ class BaseTrainer:
             if epoch == (self.epochs - self.args.close_mosaic):
                 self._close_dataloader_mosaic()
                 self.train_loader.reset()
-
-            if RANK in {-1, 0}:
-                LOGGER.info(self.progress_string())
-                pbar = TQDM(enumerate(self.train_loader), total=nb)
+            
+            #打印参数名称
+            LOGGER.info(("\n" + "%11s" * 7) % ("Epoch", "GPU_mem", "box_loss", "cls_loss", "dfl_loss", "Instances", "Size"))
+            # Epoch    GPU_mem   box_loss   cls_loss   dfl_loss  Instances       Size
+            # if RANK in {-1, 0}:
+            #     LOGGER.info(self.progress_string())
+            #     pbar = TQDM(enumerate(self.train_loader), total=nb)
             self.tloss = None
             for i, batch in pbar:
                 self.run_callbacks("on_train_batch_start")
@@ -398,10 +401,15 @@ class BaseTrainer:
                 loss_len = self.tloss.shape[0] if len(self.tloss.shape) else 1
                 losses = self.tloss if loss_len > 1 else torch.unsqueeze(self.tloss, 0)
                 if RANK in {-1, 0}:
-                    pbar.set_description(
+                    #打印训练参数
+                    LOGGER.info(
                         ("%11s" * 2 + "%11.4g" * (2 + loss_len))
                         % (f"{epoch + 1}/{self.epochs}", mem, *losses, batch["cls"].shape[0], batch["img"].shape[-1])
                     )
+                    # pbar.set_description(
+                    #     ("%11s" * 2 + "%11.4g" * (2 + loss_len))
+                    #     % (f"{epoch + 1}/{self.epochs}", mem, *losses, batch["cls"].shape[0], batch["img"].shape[-1])
+                    # )
                     self.run_callbacks("on_batch_end")
                     if self.args.plots and ni in self.plot_idx:
                         self.plot_training_samples(batch, ni)
