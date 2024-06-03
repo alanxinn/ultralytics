@@ -163,10 +163,15 @@ class BaseValidator:
             Profile(device=self.device),
             Profile(device=self.device),
         )
-        bar = TQDM(self.dataloader, desc=self.get_desc(), total=len(self.dataloader))
+
+        # 打印val名称
+        LOGGER.info(("%22s" + "%11s" * 6) % ("Class", "Images", "Instances", "P", "R", "mAP50", "mAP50-95"))
+        # 不使用tqdm直接打印结果
+        bar = enumerate(self.dataloader)
+        # bar = TQDM(self.dataloader, desc=self.get_desc(), total=len(self.dataloader))
         self.init_metrics(de_parallel(model))
         self.jdict = []  # empty before each val
-        for batch_i, batch in enumerate(bar):
+        for batch_i, batch in bar:
             self.run_callbacks("on_val_batch_start")
             self.batch_i = batch_i
             # Preprocess
